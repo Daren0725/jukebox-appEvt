@@ -521,12 +521,6 @@
             box-shadow:0 0 20px rgba(123,47,255,.18)!important;
         }
 
-        /* Emoji fix — Orbitron ne supporte pas les emojis */
-        .ico {
-            font-family: "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif;
-            font-style: normal;
-        }
-
         /* Sync badge */
         #syncBadge {
             font-family:'Orbitron',monospace; font-size:.57rem;
@@ -541,8 +535,8 @@
             border-color:rgba(0,255,204,.3);
         }
         #syncBadge.connecting {
-            color:rgba(255,200,0,.8); background:rgba(255,200,0,.07);
-            border-color:rgba(255,200,0,.28);
+            color:rgba(123,47,255,.85); background:rgba(123,47,255,.08);
+            border-color:rgba(123,47,255,.3);
         }
 
         /* Footer */
@@ -592,9 +586,9 @@
 
 <!-- ══ NAV ══ -->
 <nav id="mainNav">
-    <button class="nav-btn" id="nav-submit"  onclick="go('submit')"><span class="ico">🎵</span> Submit &amp; Queue</button>
-    <button class="nav-btn" id="nav-display" onclick="go('display')"><span class="ico">📺</span> Display</button>
-    <button class="nav-btn" id="nav-dj"      onclick="go('dj')"><span class="ico">🎧</span> DJ Console</button>
+    <button class="nav-btn" id="nav-submit"  onclick="go('submit')">&#9835; Submit &amp; Queue</button>
+    <button class="nav-btn" id="nav-display" onclick="go('display')">&#9654; Display</button>
+    <button class="nav-btn" id="nav-dj"      onclick="go('dj')">&#9878; DJ Console</button>
     <span id="syncBadge">&#9679; Local only</span>
 </nav>
 
@@ -604,7 +598,7 @@
 <div id="view-submit" class="view">
 
     <div class="sv-header">
-        <div class="logo"><span class="ico">🎵</span> JUKEBOX</div>
+        <div class="logo">&#9835; JUKEBOX</div>
         <div class="sv-sub">SAP Appreciation Event · Drop Your Track</div>
     </div>
 
@@ -656,7 +650,7 @@
 <div id="view-display" class="view">
 
     <div class="dsp-header">
-        <div class="logo"><span class="ico">🎵</span> JUKEBOX</div>
+        <div class="logo">&#9835; JUKEBOX</div>
         <div class="dsp-sub">SAP Appreciation Event</div>
     </div>
 
