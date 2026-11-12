@@ -4,9 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🎵 SAP Jukebox</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <style>
+        /* System fonts — keine externen Links nötig */
+        @font-face { font-family:'Orbitron'; src:local('Orbitron'),local('Courier New'),local('Consolas'),local('Lucida Console'); font-weight:400 900; }
+        @font-face { font-family:'Inter';    src:local('Inter'),local('Segoe UI'),local('Helvetica Neue'),local('Arial'); }
+    </style>
     <style>
         *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 
@@ -728,7 +730,6 @@
     /* ══════════════════════════════════════════════════════ */
 
     var songs   = [];
-    var fbRef   = null;
     var fbReady = false;
 
     /* Fallback cross-tab (même navigateur, sans Firebase) */
@@ -750,8 +751,7 @@
     }
 
     function initFirebase() {
-        if (!FIREBASE_CFG.apiKey || !FIREBASE_CFG.databaseURL) {
-            /* pas de config → localStorage demo data */
+        if (!FIREBASE_CFG.databaseURL) {
             setSyncStatus('local');
             try { var s = localStorage.getItem('jukebox'); if (s) songs = JSON.parse(s); } catch(e) {}
             if (!songs || !songs.length) {
@@ -764,37 +764,38 @@
             renderAll();
             return;
         }
-        try {
-            setSyncStatus('connecting');
-            if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CFG);
-            fbRef = firebase.database().ref('jukebox/songs');
-
-            /* Listener temps réel → se déclenche sur TOUS les appareils */
-            fbRef.on('value', function(snap) {
-                var val = snap.val();
-                songs = val
-                    ? Object.values(val).sort(function(a,b){ return a.ts - b.ts; })
-                    : [];
-                fbReady = true;
-                setSyncStatus('live');
-                renderAll();
-            });
-
-            firebase.database().ref('.info/connected').on('value', function(snap) {
-                if (!snap.val() && fbReady) setSyncStatus('connecting');
-            });
-        } catch(err) {
-            setSyncStatus('local');
-            renderAll();
+        setSyncStatus('connecting');
+        fbReady = false;
+        /* Poll Firebase REST API every 2.5 seconds */
+        function poll() {
+            fetch(FIREBASE_CFG.databaseURL + '/jukebox/songs.json')
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data && typeof data === 'object' && !Array.isArray(data)) {
+                        songs = Object.values(data).sort(function(a,b){ return a.ts - b.ts; });
+                    } else {
+                        songs = [];
+                    }
+                    fbReady = true;
+                    setSyncStatus('live');
+                    renderAll();
+                })
+                .catch(function() { setSyncStatus('connecting'); });
         }
+        poll();
+        setInterval(poll, 2500);
     }
 
     function persist() {
-        if (fbRef && fbReady) {
-            /* Firebase → synchro tous les appareils en temps réel */
+        if (fbReady && FIREBASE_CFG.databaseURL) {
+            /* Firebase REST API → synchro tous les appareils */
             var obj = {};
             songs.forEach(function(s) { obj[s.id] = s; });
-            fbRef.set(obj);
+            fetch(FIREBASE_CFG.databaseURL + '/jukebox/songs.json', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(obj)
+            }).catch(function(e) { console.warn('Firebase write error', e); });
         } else {
             /* Fallback local */
             try { localStorage.setItem('jukebox', JSON.stringify(songs)); } catch(e) {}
