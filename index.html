@@ -510,6 +510,12 @@
             box-shadow:0 0 20px rgba(123,47,255,.18)!important;
         }
 
+        /* Emoji fix — Orbitron ne supporte pas les emojis */
+        .ico {
+            font-family: "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif;
+            font-style: normal;
+        }
+
         /* Sync badge */
         #syncBadge {
             font-family:'Orbitron',monospace; font-size:.57rem;
@@ -575,10 +581,10 @@
 
 <!-- ══ NAV ══ -->
 <nav id="mainNav">
-    <button class="nav-btn" id="nav-submit"  onclick="go('submit')">🎵 Submit &amp; Queue</button>
-    <button class="nav-btn" id="nav-display" onclick="go('display')">📺 Display</button>
-    <button class="nav-btn" id="nav-dj"      onclick="go('dj')">🎧 DJ Console</button>
-    <span id="syncBadge">⬤ Local only</span>
+    <button class="nav-btn" id="nav-submit"  onclick="go('submit')"><span class="ico">🎵</span> Submit &amp; Queue</button>
+    <button class="nav-btn" id="nav-display" onclick="go('display')"><span class="ico">📺</span> Display</button>
+    <button class="nav-btn" id="nav-dj"      onclick="go('dj')"><span class="ico">🎧</span> DJ Console</button>
+    <span id="syncBadge">&#9679; Local only</span>
 </nav>
 
 <!-- ══════════════════════════════════════
@@ -587,7 +593,7 @@
 <div id="view-submit" class="view">
 
     <div class="sv-header">
-        <div class="logo">🎵 JUKEBOX</div>
+        <div class="logo"><span class="ico">🎵</span> JUKEBOX</div>
         <div class="sv-sub">SAP Appreciation Event · Drop Your Track</div>
     </div>
 
@@ -639,7 +645,7 @@
 <div id="view-display" class="view">
 
     <div class="dsp-header">
-        <div class="logo">🎵 JUKEBOX</div>
+        <div class="logo"><span class="ico">🎵</span> JUKEBOX</div>
         <div class="dsp-sub">SAP Appreciation Event</div>
     </div>
 
