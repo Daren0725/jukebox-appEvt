@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Discover SAP – Spinning Wheel</title>
+  <style>
+    :root {
+      --primary:  #4a70c8;
+      --navy:     #1a3070;
+      --subtext:  #5a7090;
+      --bg:       #e8f0f8;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "72", "SAP72", Arial, sans-serif;
+      background: linear-gradient(160deg, #dce8f5 0%, #e8f0fa 55%, #f0ebf8 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 32px 16px 48px;
+      color: var(--navy);
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    header .label {
+      font-size: 12px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--subtext);
+      margin-bottom: 6px;
+    }
+    header h1 {
+      font-size: clamp(22px, 4vw, 36px);
+      font-weight: 800;
+      color: var(--navy);
+    }
+    header h1 span { color: var(--primary); }
+
+    .steps {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 36px;
+    }
+    .step {
+      background: rgba(255,255,255,0.75);
+      border: 1px solid rgba(74,112,200,0.2);
+      border-radius: 20px;
+      padding: 6px 14px;
+      font-size: 12px;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 2px 8px rgba(74,112,200,0.08);
+    }
+    .step .num {
+      background: var(--primary);
+      color: #fff;
+      border-radius: 50%;
+      width: 18px; height: 18px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .wheel-area {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 28px;
+    }
+
+    .wheel-wrapper {
+      position: relative;
+      width: min(420px, 90vw);
+      height: min(420px, 90vw);
+    }
+
+    /* Glow ring */
+    .wheel-wrapper::before {
+      content: "";
+      position: absolute;
+      inset: -12px;
+      border-radius: 50%;
+      background: conic-gradient(
+        rgba(74,112,200,0.4), rgba(200,148,220,0.4),
+        rgba(240,168,168,0.4), rgba(74,112,200,0.4)
+      );
+      filter: blur(16px);
+      opacity: 0.5;
+      z-index: 0;
+      transition: opacity 0.3s;
+    }
+    .wheel-wrapper.spinning::before { opacity: 0.9; }
+
+    canvas#wheel {
+      position: relative;
+      z-index: 1;
+      border-radius: 50%;
+      display: block;
+      width: 100%; height: 100%;
+      filter: drop-shadow(0 8px 32px rgba(74,112,200,0.25));
+    }
+
+    /* Pointer */
+    .pointer {
+      position: absolute;
+      top: 50%;
+      right: -18px;
+      transform: translateY(-50%);
+      z-index: 10;
+      width: 0; height: 0;
+      border-top: 18px solid transparent;
+      border-bottom: 18px solid transparent;
+      border-right: 38px solid #2a40a0;
+      filter: drop-shadow(2px 0 6px rgba(42,64,160,0.5));
+    }
+
+    /* Center hub */
+    .hub {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 20;
+      width: 54px; height: 54px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #2a40a0 0%, #1a2870 100%);
+      box-shadow: 0 0 0 4px rgba(255,255,255,0.5), 0 4px 16px rgba(26,40,112,0.4);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .hub svg { width: 26px; height: 26px; }
+
+    .spin-btn {
+      background: linear-gradient(135deg, #4a70c8, #3358b0);
+      color: #fff;
+      border: none;
+      border-radius: 40px;
+      padding: 16px 52px;
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      cursor: pointer;
+      box-shadow: 0 6px 24px rgba(74,112,200,0.45);
+      transition: transform 0.15s, box-shadow 0.15s, background 0.2s;
+      position: relative;
+      z-index: 1;
+    }
+    .spin-btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 32px rgba(74,112,200,0.6);
+    }
+    .spin-btn:active:not(:disabled) { transform: translateY(0); }
+    .spin-btn:disabled {
+      background: #b8cce0;
+      color: #8aaac8;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    /* Result card */
+    .result-card {
+      display: none;
+      background: rgba(255,255,255,0.88);
+      border: 1.5px solid rgba(74,112,200,0.18);
+      border-radius: 20px;
+      padding: 28px 32px;
+      max-width: 480px;
+      width: 100%;
+      text-align: center;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 8px 40px rgba(74,112,200,0.15);
+      animation: popIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(0.85) translateY(16px); }
+      to   { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .result-card.visible { display: block; }
+
+    .result-card .badge {
+      display: inline-block;
+      border-radius: 40px;
+      padding: 6px 20px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+
+    .result-card h2 {
+      font-size: clamp(20px, 3vw, 28px);
+      font-weight: 800;
+      color: var(--navy);
+      margin-bottom: 10px;
+    }
+    .result-card p.desc {
+      font-size: 15px;
+      color: var(--subtext);
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+
+    .options-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 4px;
+    }
+    .option-chip {
+      background: rgba(74,112,200,0.07);
+      border: 1px solid rgba(74,112,200,0.18);
+      border-radius: 10px;
+      padding: 10px 8px;
+      font-size: 12px;
+      color: #3a5080;
+      line-height: 1.4;
+    }
+    .option-chip strong {
+      display: block;
+      color: var(--primary);
+      font-size: 11px;
+      margin-bottom: 3px;
+    }
+
+    /* QR Code upload section */
+    .qr-section {
+      display: none;
+      text-align: center;
+      margin-top: 20px;
+      padding: 24px 22px 20px;
+      background: rgba(255,255,255,0.85);
+      border: 1px solid rgba(74,112,200,0.18);
+      border-radius: 20px;
+      max-width: 480px;
+      width: 100%;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 4px 24px rgba(74,112,200,0.1);
+      animation: popIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    .qr-section.visible { display: block; }
+    .qr-section h3 {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 5px;
+    }
+    .qr-section .qr-sub {
+      font-size: 13px;
+      color: var(--subtext);
+      margin-bottom: 16px;
+      line-height: 1.4;
+    }
+    .qr-code-wrap {
+      background: #fff;
+      border-radius: 14px;
+      padding: 14px;
+      display: inline-block;
+      box-shadow: 0 2px 12px rgba(74,112,200,0.15);
+    }
+    .qr-url-text {
+      margin-top: 12px;
+      font-size: 11px;
+      color: rgba(42,64,160,0.35);
+      word-break: break-all;
+    }
+
+    footer {
+      margin-top: 48px;
+      font-size: 12px;
+      color: rgba(26,48,112,0.35);
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Spinning <span>Wheel</span></h1>
+</header>
+
+<div class="steps">
+  <div class="step"><span class="num">1</span> Spin the wheel</div>
+  <div class="step"><span class="num">2</span> Receive a category</div>
+  <div class="step"><span class="num">3</span> Complete the challenge</div>
+  <div class="step"><span class="num">4</span> Upload via QR code</div>
+  <div class="step"><span class="num">5</span> Photo goes live</div>
+</div>
+
+<div class="wheel-area">
+  <div class="wheel-wrapper" id="wheelWrapper">
+    <canvas id="wheel" width="480" height="480"></canvas>
+    <div class="pointer"></div>
+    <div class="hub">
+      <!-- Star icon -->
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2l2.9 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l7.1-1.01L12 2z"
+              fill="#ffffff" stroke="#ffffff" stroke-width="1"/>
+      </svg>
+    </div>
+  </div>
+
+  <button class="spin-btn" id="spinBtn" onclick="spin()">🎡 SPIN</button>
+
+  <div class="result-card" id="resultCard">
+    <div class="badge" id="resultBadge"></div>
+    <h2 id="resultTitle"></h2>
+    <p class="desc" id="resultDesc"></p>
+    <div class="options-grid" id="resultOptions"></div>
+  </div>
+
+  <!-- QR code — appears after spinning -->
+  <div class="qr-section" id="qrSection">
+    <h3>📸 Upload your photo</h3>
+    <p class="qr-sub">Scan the QR code with your phone,<br>upload your photo and see it on the gallery!</p>
+    <div class="qr-code-wrap" id="qrCode"></div>
+    <p class="qr-url-text" id="qrUrlText"></p>
+  </div>
+</div>
+
+<footer>Discover SAP</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+  // ── Photo upload URL ────────────────────────────────────────────────────────
+  // Auto-detects when served via the Node.js server; falls back to localhost:3000
+  const UPLOAD_BASE = (window.location.origin && !window.location.origin.startsWith('file'))
+    ? window.location.origin
+    : 'http://localhost:3000';
+  const UPLOAD_PAGE = UPLOAD_BASE + '/photo-upload.html';
+
+  let _qrInstance = null;
+
+  // ── Segment data ────────────────────────────────────────────────────────────
+  const base = [
+    {
+      label: "Community\nSnap",
+      color: "#7ab8e8",
+      colorAlt: "#4a7fd4",
+      textColor: "#1a3070",
+      badge: "👥 Community",
+      badgeColor: "#4a7fd4",
+      title: "Community Snap",
+      desc: "Take a selfie with someone you met for the first time today.",
+      options: [
+        { key: "Example A", text: "Selfie with a person from a different team" },
+        { key: "Example B", text: "Photo with someone who has an unexpected hobby" },
+        { key: "Example C", text: "You + the colleague who surprised you most" }
+      ]
+    },
+    {
+      label: "Showroom\nDiscovery",
+      color: "#c8b8e8",
+      colorAlt: "#9080cc",
+      textColor: "#1a3070",
+      badge: "🔍 Explore",
+      badgeColor: "#7060b8",
+      title: "Showroom Discovery",
+      desc: "Find and photograph something specific in the Showroom.",
+      options: [
+        { key: "Example A", text: "Photo with the CPIT robot" },
+        { key: "Example B", text: "A product demo screen in action" },
+        { key: "Example C", text: "The most interesting thing you discovered today" }
+      ]
+    },
+    {
+      label: "Creative\nPose",
+      color: "#f0a8a8",
+      colorAlt: "#e07878",
+      textColor: "#1a3070",
+      badge: "🎭 Creative",
+      badgeColor: "#c85878",
+      title: "Creative Pose",
+      desc: "Take the most creative or funny group photo you can.",
+      options: [
+        { key: "Example A", text: "Synchronized jump photo with 3 colleagues" },
+        { key: "Example B", text: "Everyone re-enacting a famous SAP moment" },
+        { key: "Example C", text: "Power pose in front of the Showroom entrance" }
+      ]
+    }
+  ];
+
+  // Each category appears twice — alternating shade so neighbours are visually distinct
+  const segments = [
+    { ...base[0], color: base[0].color },
+    { ...base[1], color: base[1].color },
+    { ...base[2], color: base[2].color },
+    { ...base[0], color: base[0].colorAlt },
+    { ...base[1], color: base[1].colorAlt },
+    { ...base[2], color: base[2].colorAlt },
+  ];
+
+  // ── Canvas setup ────────────────────────────────────────────────────────────
+  const canvas = document.getElementById("wheel");
+  const ctx = canvas.getContext("2d");
+  const NUM = segments.length;
+  const ARC = (2 * Math.PI) / NUM;
+  const CX = canvas.width / 2;
+  const CY = canvas.height / 2;
+  const R  = CX - 12;
+
+  let currentAngle = 0;
+  let spinning = false;
+  let lastCategory = null;
+
+  function drawWheel(angle) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    for (let i = 0; i < NUM; i++) {
+      const start = angle + i * ARC;
+      const end   = start + ARC;
+      const seg   = segments[i];
+
+      // Sector
+      ctx.beginPath();
+      ctx.moveTo(CX, CY);
+      ctx.arc(CX, CY, R, start, end);
+      ctx.closePath();
+      ctx.fillStyle = seg.color;
+      ctx.fill();
+      ctx.strokeStyle = "rgba(255,255,255,0.55)";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Alternating lighter inner ring
+      ctx.beginPath();
+      ctx.moveTo(CX, CY);
+      ctx.arc(CX, CY, R * 0.94, start + 0.02, end - 0.02);
+      ctx.closePath();
+      ctx.fillStyle = "rgba(255,255,255,0.07)";
+      ctx.fill();
+
+      // Label
+      ctx.save();
+      ctx.translate(CX, CY);
+      ctx.rotate(start + ARC / 2);
+      ctx.textAlign = "right";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = seg.textColor;
+      ctx.font = "bold 14px Arial, sans-serif";
+      const lines = seg.label.split("\n");
+      const lineH = 17;
+      const totalH = lines.length * lineH;
+      lines.forEach((line, li) => {
+        ctx.fillText(line, R * 0.88, -totalH / 2 + li * lineH + lineH / 2);
+      });
+      ctx.restore();
+    }
+
+    // Outer ring
+    ctx.beginPath();
+    ctx.arc(CX, CY, R, 0, 2 * Math.PI);
+    ctx.strokeStyle = "rgba(255,255,255,0.7)";
+    ctx.lineWidth = 5;
+    ctx.stroke();
+  }
+
+  drawWheel(currentAngle);
+
+  // ── Spin logic ──────────────────────────────────────────────────────────────
+  function spin() {
+    if (spinning) return;
+    spinning = true;
+
+    const btn = document.getElementById("spinBtn");
+    const card = document.getElementById("resultCard");
+    btn.disabled = true;
+    card.classList.remove("visible");
+    document.getElementById("qrSection").classList.remove("visible");
+    document.getElementById("wheelWrapper").classList.add("spinning");
+
+    // Pointer is at angle = 0 (pointing right → 3 o'clock → index-based)
+    // We want a winning segment to land under the pointer.
+    // Prevent the same category from appearing twice in a row.
+    let winner;
+    let attempts = 0;
+    do {
+      winner = Math.floor(Math.random() * NUM);
+      attempts++;
+    } while (segments[winner].title === lastCategory && attempts < 10);
+    const fullTurns = 5 + Math.floor(Math.random() * 4); // 5-8 full spins
+    const targetAngle = currentAngle
+      + fullTurns * 2 * Math.PI
+      + (2 * Math.PI - (currentAngle % (2 * Math.PI)))   // normalise
+      + (2 * Math.PI - winner * ARC - ARC / 2);          // center winner under pointer
+
+    const duration = 4500;
+    const startTime = performance.now();
+    const startAngle = currentAngle;
+
+    function easeOut(t) {
+      return 1 - Math.pow(1 - t, 4);
+    }
+
+    function animate(now) {
+      const elapsed = now - startTime;
+      const t = Math.min(elapsed / duration, 1);
+      currentAngle = startAngle + (targetAngle - startAngle) * easeOut(t);
+      drawWheel(currentAngle);
+
+      if (t < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        // Normalize angle to [0, 2π] to prevent floating-point drift over many spins
+        currentAngle = targetAngle % (2 * Math.PI);
+        lastCategory = segments[winner].title;
+        spinning = false;
+        btn.disabled = false;
+        btn.textContent = "🎡 SPIN AGAIN";
+        document.getElementById("wheelWrapper").classList.remove("spinning");
+        showResult(winner);
+      }
+    }
+
+    requestAnimationFrame(animate);
+  }
+
+  function showResult(index) {
+    const seg = segments[index];
+    const card = document.getElementById("resultCard");
+
+    document.getElementById("resultBadge").textContent = seg.badge;
+    document.getElementById("resultBadge").style.background = seg.badgeColor + "33";
+    document.getElementById("resultBadge").style.color = seg.badgeColor === "#2d8e8e" ? "#5ecfcf" :
+      seg.badgeColor === "#1a6fa8" ? "#5baee8" :
+      seg.badgeColor === "#b5327a" ? "#e57bb5" :
+      seg.badgeColor === "#6246b0" ? "#a98fe0" :
+      seg.badgeColor === "#e67e22" ? "#f0ac6a" : "#6dd98d";
+    document.getElementById("resultBadge").style.border = `1px solid ${seg.badgeColor}55`;
+
+    document.getElementById("resultTitle").textContent = seg.title;
+    document.getElementById("resultDesc").textContent = seg.desc;
+
+    const grid = document.getElementById("resultOptions");
+    grid.innerHTML = seg.options.map(o =>
+      `<div class="option-chip"><strong>${o.key}</strong>${o.text}</div>`
+    ).join("");
+
+    card.classList.add("visible");
+    card.scrollIntoView({ behavior: "smooth", block: "nearest" });
+
+    // ── Generate QR code ─────────────────────────────────────────
+    const qrSection  = document.getElementById("qrSection");
+    const qrContainer = document.getElementById("qrCode");
+    const qrUrlText  = document.getElementById("qrUrlText");
+
+    const uploadUrl = UPLOAD_PAGE + "?category=" + encodeURIComponent(seg.title);
+    qrUrlText.textContent = uploadUrl;
+    qrContainer.innerHTML = "";
+
+    if (typeof QRCode !== "undefined") {
+      _qrInstance = new QRCode(qrContainer, {
+        text: uploadUrl,
+        width: 180,
+        height: 180,
+        colorDark: "#000000",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.M
+      });
+    }
+
+    qrSection.classList.add("visible");
+    setTimeout(() => qrSection.scrollIntoView({ behavior: "smooth", block: "nearest" }), 200);
+  }
+</script>
+</body>
+</html>

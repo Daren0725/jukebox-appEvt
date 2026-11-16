@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Photo Gallery – SAP Appreciation Event</title>
+  <style>
+    :root {
+      --blue:  #0070f2;
+      --gold:  #f5a623;
+      --green: #4ade80;
+      --bg:    #080f1c;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "72", "Segoe UI", Arial, sans-serif;
+      background: var(--bg);
+      min-height: 100vh;
+      color: #fff;
+      overflow-x: hidden;
+    }
+
+    /* ── Animated background ── */
+    .bg-orb {
+      position: fixed; border-radius: 50%;
+      filter: blur(120px); opacity: .12;
+      pointer-events: none; z-index: 0;
+      animation: orbFloat 18s ease-in-out infinite;
+    }
+    .orb1 { width: 600px; height: 600px; background: var(--blue); top: -200px; left: -100px; }
+    .orb2 { width: 500px; height: 500px; background: var(--gold); bottom: -150px; right: -100px; animation-delay: -9s; }
+    @keyframes orbFloat {
+      0%,100% { transform: scale(1) translate(0,0); }
+      50%      { transform: scale(1.1) translate(30px,-30px); }
+    }
+
+    /* ── Header ── */
+    header {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(8,15,28,.75);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(255,255,255,.07);
+      padding: 14px 28px;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 16px;
+    }
+    .hdr-brand {
+      display: flex; align-items: center; gap: 12px;
+    }
+    .sap-badge {
+      background: var(--blue); color: #fff;
+      font-size: 13px; font-weight: 900;
+      padding: 4px 9px; border-radius: 5px;
+      letter-spacing: .5px; flex-shrink: 0;
+    }
+    .hdr-titles h1 { font-size: 17px; font-weight: 700; line-height: 1.1; }
+    .hdr-titles p  { font-size: 11px; color: #5a7a9a; margin-top: 1px; }
+    .hdr-right { display: flex; align-items: center; gap: 12px; }
+    .count-pill {
+      background: rgba(0,112,242,.15);
+      border: 1px solid rgba(0,112,242,.3);
+      border-radius: 20px; padding: 5px 14px;
+      font-size: 13px; color: #5baee8;
+      transition: all .3s;
+      white-space: nowrap;
+    }
+    .count-pill.bump { background: rgba(0,112,242,.35); transform: scale(1.1); }
+    .live-indicator {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 12px; color: var(--green); white-space: nowrap;
+    }
+    .live-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 8px var(--green);
+      animation: livePulse 2s ease-in-out infinite;
+    }
+    @keyframes livePulse {
+      0%,100% { opacity: 1; transform: scale(1); }
+      50%      { opacity: .4; transform: scale(.85); }
+    }
+
+    /* ── Empty state ── */
+    .empty-state {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      min-height: 70vh; text-align: center; padding: 48px 32px;
+      position: relative; z-index: 1;
+    }
+    .empty-emoji {
+      font-size: 80px; margin-bottom: 20px;
+      animation: emptyBob 3s ease-in-out infinite;
+      filter: drop-shadow(0 0 24px rgba(0,112,242,.4));
+    }
+    @keyframes emptyBob {
+      0%,100% { transform: translateY(0) rotate(-3deg); }
+      50%      { transform: translateY(-12px) rotate(3deg); }
+    }
+    .empty-state h2 { font-size: 26px; font-weight: 700; margin-bottom: 8px; }
+    .empty-state p  { font-size: 15px; color: #5a7a9a; max-width: 300px; line-height: 1.6; }
+
+    /* ── Gallery grid ── */
+    .gallery-wrap { position: relative; z-index: 1; padding: 20px; }
+    .gallery {
+      columns: 4 180px;
+      gap: 14px;
+    }
+    @media (max-width: 640px) {
+      .gallery { columns: 2 130px; gap: 10px; }
+      .gallery-wrap { padding: 14px; }
+    }
+
+    /* ── Photo item ── */
+    .photo-item {
+      break-inside: avoid;
+      margin-bottom: 14px;
+      border-radius: 16px;
+      overflow: hidden;
+      position: relative;
+      cursor: pointer;
+      background: rgba(255,255,255,.04);
+      box-shadow: 0 4px 24px rgba(0,0,0,.4);
+      animation: photoIn .55s cubic-bezier(.34,1.2,.64,1) both;
+      transition: transform .25s, box-shadow .25s;
+    }
+    @keyframes photoIn {
+      from { opacity: 0; transform: scale(.88) translateY(20px); }
+      to   { opacity: 1; transform: scale(1)  translateY(0); }
+    }
+    .photo-item:hover {
+      transform: scale(1.03) translateY(-3px);
+      box-shadow: 0 12px 40px rgba(0,0,0,.6), 0 0 0 1.5px rgba(255,255,255,.12);
+    }
+    .photo-item img {
+      width: 100%; display: block;
+      transition: transform .3s;
+    }
+    .photo-item:hover img { transform: scale(1.05); }
+
+    /* Category overlay */
+    .photo-overlay {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      background: linear-gradient(transparent, rgba(0,0,0,.75));
+      padding: 20px 10px 10px;
+      opacity: 0; transition: opacity .2s;
+    }
+    .photo-item:hover .photo-overlay { opacity: 1; }
+    .cat-chip {
+      display: inline-block; border-radius: 8px;
+      padding: 3px 9px; font-size: 10px; font-weight: 700;
+    }
+
+    /* NEW badge */
+    .new-badge {
+      position: absolute; top: 10px; right: 10px;
+      background: var(--gold); color: #1a1a1a;
+      font-size: 10px; font-weight: 900;
+      padding: 3px 9px; border-radius: 20px;
+      letter-spacing: .5px;
+      box-shadow: 0 2px 12px rgba(245,166,35,.6);
+      animation: newBadgeIn .3s ease both;
+    }
+    @keyframes newBadgeIn {
+      from { opacity: 0; transform: scale(.7); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+
+    /* ── Toast notification ── */
+    .toast {
+      position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(80px);
+      background: rgba(20,40,60,.95); backdrop-filter: blur(14px);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 40px; padding: 12px 24px;
+      font-size: 14px; font-weight: 600;
+      color: #fff; white-space: nowrap;
+      z-index: 500;
+      transition: transform .4s cubic-bezier(.34,1.56,.64,1);
+      box-shadow: 0 8px 32px rgba(0,0,0,.5);
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    /* ── Lightbox ── */
+    .lightbox {
+      display: none; position: fixed; inset: 0; z-index: 1000;
+      background: rgba(0,0,0,.92); backdrop-filter: blur(16px);
+      align-items: center; justify-content: center;
+      animation: lbIn .2s ease;
+    }
+    @keyframes lbIn { from { opacity: 0; } to { opacity: 1; } }
+    .lightbox.open { display: flex; }
+    .lb-inner { position: relative; max-width: 90vw; max-height: 90vh; }
+    .lb-inner img {
+      max-width: 90vw; max-height: 85vh;
+      border-radius: 16px; object-fit: contain;
+      box-shadow: 0 20px 80px rgba(0,0,0,.8);
+      animation: lbImgIn .25s ease;
+    }
+    @keyframes lbImgIn { from { transform: scale(.95); } to { transform: scale(1); } }
+    .lb-close {
+      position: fixed; top: 20px; right: 24px;
+      font-size: 30px; cursor: pointer;
+      color: rgba(255,255,255,.6); line-height: 1;
+      transition: color .15s;
+    }
+    .lb-close:hover { color: #fff; }
+    .lb-cat {
+      position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
+      font-size: 13px; color: rgba(255,255,255,.5);
+    }
+
+    footer {
+      text-align: center; padding: 20px;
+      font-size: 11px; color: rgba(255,255,255,.15);
+      position: relative; z-index: 1;
+    }
+  </style>
+</head>
+<body>
+
+<div class="bg-orb orb1"></div>
+<div class="bg-orb orb2"></div>
+
+<!-- Header -->
+<header>
+  <div class="hdr-brand">
+    <div class="sap-badge">SAP</div>
+    <div class="hdr-titles">
+      <h1>📸 Event Gallery</h1>
+      <p>SAP Discovery Showroom · Appreciation 2026</p>
+    </div>
+  </div>
+  <div class="hdr-right">
+    <div class="count-pill" id="countPill"><span id="photoCount">0</span> photos</div>
+    <div class="live-indicator"><div class="live-dot"></div>Live</div>
+  </div>
+</header>
+
+<!-- Empty state -->
+<div class="empty-state" id="emptyState">
+  <div class="empty-emoji">📷</div>
+  <h2>Gallery is empty</h2>
+  <p>Spin the wheel, complete your challenge, and be the first to upload!</p>
+</div>
+
+<!-- Gallery -->
+<div class="gallery-wrap" id="galleryWrap" style="display:none">
+  <div class="gallery" id="photoGrid"></div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox" onclick="closeLb()">
+  <span class="lb-close" onclick="closeLb()">✕</span>
+  <div class="lb-inner" onclick="event.stopPropagation()">
+    <img id="lbImg" src="" alt=""/>
+  </div>
+  <div class="lb-cat" id="lbCat"></div>
+</div>
+
+<footer>SAP Discovery Showroom · Appreciation Event 2026</footer>
+
+<script>
+  const FB = {
+    databaseURL: 'https://jukebox-appreciation-event-default-rtdb.europe-west1.firebasedatabase.app'
+  };
+
+  const CAT_STYLES = {
+    'Community Snap':     { bg: 'rgba(45,142,142,.25)',  text: '#5ecfcf',  border: 'rgba(45,142,142,.5)' },
+    'Showroom Discovery': { bg: 'rgba(0,112,242,.25)',   text: '#7bbcff',  border: 'rgba(0,112,242,.5)' },
+    'Creative Pose':      { bg: 'rgba(181,50,122,.25)',  text: '#e57bb5',  border: 'rgba(181,50,122,.5)' }
+  };
+
+  let knownIds  = new Set();
+  let totalPhotos = 0;
+
+  async function fetchPhotos() {
+    try {
+      const res  = await fetch(`${FB.databaseURL}/photobooth/photos.json`);
+      const data = await res.json();
+      if (!data || typeof data !== 'object') return;
+
+      const photos = Object.values(data).sort((a, b) => b.id - a.id);
+      const newPhotos = photos.filter(p => !knownIds.has(p.id));
+
+      if (newPhotos.length > 0) {
+        newPhotos.forEach(p => knownIds.add(p.id));
+        totalPhotos = photos.length;
+        renderNewPhotos(newPhotos);
+        updateCount(totalPhotos);
+        if (knownIds.size > newPhotos.length && newPhotos.length === 1) {
+          showToast(`📸 New photo: ${newPhotos[0].category}!`);
+        }
+      }
+    } catch (e) { /* silently retry */ }
+  }
+
+  function updateCount(n) {
+    const pill = document.getElementById('countPill');
+    document.getElementById('photoCount').textContent = n;
+    pill.classList.add('bump');
+    setTimeout(() => pill.classList.remove('bump'), 400);
+  }
+
+  function renderNewPhotos(newPhotos) {
+    const grid  = document.getElementById('photoGrid');
+    const empty = document.getElementById('emptyState');
+    const wrap  = document.getElementById('galleryWrap');
+    empty.style.display = 'none';
+    wrap.style.display  = 'block';
+
+    newPhotos.forEach((photo, i) => {
+      const cat   = photo.category || 'Unknown';
+      const style = CAT_STYLES[cat] || { bg: 'rgba(255,255,255,.12)', text: '#c0d4ec', border: 'rgba(255,255,255,.3)' };
+
+      const item = document.createElement('div');
+      item.className = 'photo-item';
+      item.style.animationDelay = (i * 0.08) + 's';
+      item.innerHTML = `
+        <img src="${photo.dataUrl}" alt="${cat}" loading="lazy"/>
+        <div class="photo-overlay">
+          <span class="cat-chip" style="background:${style.bg};color:${style.text};border:1px solid ${style.border}">${cat}</span>
+        </div>
+        <span class="new-badge">NEW ✨</span>
+      `;
+      item.addEventListener('click', () => openLb(photo.dataUrl, cat));
+      grid.prepend(item);
+
+      // Remove "NEW" badge after 10 seconds
+      setTimeout(() => {
+        const badge = item.querySelector('.new-badge');
+        if (badge) badge.style.cssText = 'opacity:0;transition:opacity .5s';
+        setTimeout(() => badge?.remove(), 500);
+      }, 10000);
+    });
+  }
+
+  let toastTimer;
+  function showToast(msg) {
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove('show'), 3500);
+  }
+
+  function openLb(src, cat) {
+    document.getElementById('lbImg').src = src;
+    document.getElementById('lbCat').textContent = cat;
+    document.getElementById('lightbox').classList.add('open');
+  }
+  function closeLb() {
+    document.getElementById('lightbox').classList.remove('open');
+  }
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLb(); });
+
+  fetchPhotos();
+  setInterval(fetchPhotos, 3500);
+</script>
+</body>
+</html>
