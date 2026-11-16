@@ -334,10 +334,8 @@
 <script>
   // ── Photo upload URL ────────────────────────────────────────────────────────
   // Auto-detects when served via the Node.js server; falls back to localhost:3000
-  const UPLOAD_BASE = (window.location.origin && !window.location.origin.startsWith('file'))
-    ? window.location.origin
-    : 'http://localhost:3000';
-  const UPLOAD_PAGE = UPLOAD_BASE + '/photo-upload.html';
+  // Builds the upload URL relative to the current page — works on GitHub Pages, local server, etc.
+  const UPLOAD_PAGE = new URL('photo-upload.html', window.location.href).href;
 
   let _qrInstance = null;
 
