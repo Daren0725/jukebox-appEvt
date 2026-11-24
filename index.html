@@ -596,7 +596,7 @@
 <nav id="mainNav">
     <button class="nav-btn" id="nav-submit"  onclick="go('submit')">&#9835; Submit &amp; Queue</button>
     <button class="nav-btn" id="nav-display" onclick="go('display')">&#9654; Display</button>
-    <button class="nav-btn" id="nav-dj"      onclick="go('dj')">&#9878; DJ Console</button>
+
     <span id="syncBadge">&#9679; Local only</span>
 </nav>
 
@@ -624,11 +624,7 @@
                 <label>Artist</label>
                 <input type="text" id="artistInput" inputmode="none" placeholder="e.g. The Weeknd" onclick="showKb('artistInput','Artist')" readonly />
             </div>
-            <div class="fg">
-                <label>Your Name <span style="opacity:.4">(optional)</span></label>
-                <input type="text" id="nameInput" inputmode="none" placeholder="e.g. Alex" onclick="showKb('nameInput','Your Name')" readonly />
-            </div>
-            <button class="btn-primary" onclick="addSong()">▶&nbsp;&nbsp;Add to Queue</button>
+            <button class="btn-primary" onclick="addSong()">&#9654;&nbsp;&nbsp;Add to Queue</button>
             <div class="toast" id="toast">
                 🎵 Added! You're <strong>#<span id="qPos">?</span></strong> in the queue.
             </div>
@@ -980,14 +976,13 @@
     function addSong() {
         var sv = document.getElementById('songInput').value.trim();
         var av = document.getElementById('artistInput').value.trim();
-        var nv = document.getElementById('nameInput').value.trim();
         var ok = true;
         if (!sv) { flagErr('songInput');   ok = false; }
         if (!av) { flagErr('artistInput'); ok = false; }
         if (!ok) return;
 
         var newId = Date.now();
-        songs.push({id: newId, song: sv, artist: av, name: nv, status: 'queued', ts: newId});
+        songs.push({id: newId, song: sv, artist: av, name: '', status: 'queued', ts: newId});
         persist();
         renderAll();
 
@@ -996,7 +991,6 @@
 
         document.getElementById('songInput').value   = '';
         document.getElementById('artistInput').value = '';
-        document.getElementById('nameInput').value   = '';
 
         /* Highlight new row */
         setTimeout(function() {
@@ -1122,8 +1116,8 @@
         ]
     };
 
-    var KB_FIELDS  = ['songInput','artistInput','nameInput'];
-    var KB_LABELS  = ['Song Title','Artist','Your Name'];
+    var KB_FIELDS  = ['songInput','artistInput'];
+    var KB_LABELS  = ['Song Title','Artist'];
 
     function kbNextLabel() {
         var idx = KB_FIELDS.indexOf(kbTarget);
