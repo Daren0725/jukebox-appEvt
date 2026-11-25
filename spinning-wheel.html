@@ -17,18 +17,19 @@
     body {
       font-family: "72", "SAP72", Arial, sans-serif;
       background: linear-gradient(160deg, #dce8f5 0%, #e8f0fa 55%, #f0ebf8 100%);
-      min-height: 100vh;
+      height: 100vh;
+      overflow: hidden;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: flex-start;
-      padding: 32px 16px 48px;
+      justify-content: center;
+      padding: 10px 16px;
       color: var(--navy);
     }
 
     header {
       text-align: center;
-      margin-bottom: 32px;
+      margin-bottom: 8px;
     }
     header .label {
       font-size: 12px;
@@ -44,13 +45,16 @@
     }
     header h1 span { color: var(--primary); }
 
-    .steps {
+    /* ── Steps bar (horizontal, always visible below header) ── */
+    .steps-bar {
       display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
+      gap: 6px;
       justify-content: center;
-      margin-bottom: 36px;
+      flex-wrap: wrap;
+      padding: 4px 16px;
+      flex-shrink: 0;
     }
+    .steps-bar .step { font-size: 11px; padding: 4px 10px; }
     .step {
       background: rgba(255,255,255,0.75);
       border: 1px solid rgba(74,112,200,0.2);
@@ -73,17 +77,56 @@
       flex-shrink: 0;
     }
 
-    .wheel-area {
+    /* ── Main layout: starts centered, splits after spin ── */
+    .main-layout {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+      gap: 0;
+      overflow: hidden;
+      transition: gap .5s ease;
+    }
+
+    /* Wheel column — always visible, centered initially */
+    .wheel-col {
       display: flex;
       flex-direction: column;
       align-items: center;
+      gap: 14px;
+      flex-shrink: 0;
+    }
+
+    /* Result column — hidden initially, slides in after spin */
+    .result-col {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      width: 0;
+      min-width: 0;
+      overflow: hidden;
+      opacity: 0;
+      flex-shrink: 0;
+      transition: width .55s cubic-bezier(.34,1.1,.64,1),
+                  opacity .4s .15s ease;
+    }
+    .result-col > * { min-width: 400px; }
+
+    /* Triggered by JS when result-card gets .visible */
+    .main-layout.revealed {
       gap: 28px;
+    }
+    .main-layout.revealed .result-col {
+      width: 420px;
+      opacity: 1;
+      overflow: visible;
     }
 
     .wheel-wrapper {
       position: relative;
-      width: min(420px, 90vw);
-      height: min(420px, 90vw);
+      width: min(360px, 44vh);
+      height: min(360px, 44vh);
     }
 
     /* Glow ring */
@@ -174,7 +217,6 @@
       border: 1.5px solid rgba(74,112,200,0.18);
       border-radius: 20px;
       padding: 28px 32px;
-      max-width: 480px;
       width: 100%;
       text-align: center;
       backdrop-filter: blur(12px);
@@ -242,7 +284,6 @@
       background: rgba(255,255,255,0.85);
       border: 1px solid rgba(74,112,200,0.18);
       border-radius: 20px;
-      max-width: 480px;
       width: 100%;
       backdrop-filter: blur(8px);
       box-shadow: 0 4px 24px rgba(74,112,200,0.1);
@@ -278,9 +319,8 @@
     /* ── Auto-reset countdown ── */
     .countdown-wrap {
       display: none;
-      max-width: 480px;
       width: 100%;
-      margin-top: 14px;
+      margin-top: 8px;
       text-align: center;
     }
     .countdown-text {
@@ -304,7 +344,7 @@
     }
 
     footer {
-      margin-top: 48px;
+      margin-top: 6px;
       font-size: 12px;
       color: rgba(26,48,112,0.35);
       text-align: center;
@@ -317,7 +357,7 @@
   <h1>Spinning <span>Wheel</span></h1>
 </header>
 
-<div class="steps">
+<div class="steps-bar">
   <div class="step"><span class="num">1</span> Spin the wheel</div>
   <div class="step"><span class="num">2</span> Receive a category</div>
   <div class="step"><span class="num">3</span> Complete the challenge</div>
@@ -325,8 +365,9 @@
   <div class="step"><span class="num">5</span> Photo goes live</div>
 </div>
 
-<div class="wheel-area">
-  <div class="wheel-wrapper" id="wheelWrapper">
+<div class="main-layout" id="mainLayout">
+  <div class="wheel-col">
+    <div class="wheel-wrapper" id="wheelWrapper">
     <canvas id="wheel" width="480" height="480"></canvas>
     <div class="pointer"></div>
     <div class="hub">
@@ -342,7 +383,9 @@
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:8px"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
     SPIN
   </button>
+  </div><!-- /wheel-col -->
 
+  <div class="result-col">
   <div class="result-card" id="resultCard">
     <div class="badge" id="resultBadge"></div>
     <h2 id="resultTitle"></h2>
@@ -369,7 +412,8 @@
       <div class="countdown-bar" id="countdownBar"></div>
     </div>
   </div>
-</div>
+  </div><!-- /result-col -->
+</div><!-- /main-layout -->
 
 <footer>Discover SAP</footer>
 
@@ -423,6 +467,7 @@
   function resetToWheel() {
     document.getElementById('resultCard').classList.remove('visible');
     document.getElementById('qrSection').classList.remove('visible');
+    document.getElementById('mainLayout').classList.remove('revealed');
     document.getElementById('spinBtn').innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:8px"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> SPIN';
   }
 
@@ -562,6 +607,7 @@
     btn.disabled = true;
     card.classList.remove("visible");
     document.getElementById("qrSection").classList.remove("visible");
+    document.getElementById("mainLayout").classList.remove("revealed");
     clearAutoReset();
     document.getElementById("wheelWrapper").classList.add("spinning");
 
@@ -633,6 +679,7 @@
     ).join("");
 
     card.classList.add("visible");
+    document.getElementById("mainLayout").classList.add("revealed");
     card.scrollIntoView({ behavior: "smooth", block: "nearest" });
 
     // Show QR section (static QR code — no external library needed)
