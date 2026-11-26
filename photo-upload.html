@@ -2,432 +2,274 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <meta name="apple-mobile-web-app-capable" content="yes"/>
-  <meta name="theme-color" content="#e8f0f8"/>
-  <title>Upload Your Photo – SAP Appreciation Event</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Upload Your Photo – SAP Discovery Showroom</title>
   <style>
     :root {
       --primary: #4a70c8;
       --navy:    #1a3070;
-      --subtext: #5a7090;
-      --green:   #22c55e;
-      --bg:      #e8f0f8;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-
     body {
-      font-family: "72", "Segoe UI", Arial, sans-serif;
+      font-family: "72", "SAP72", Arial, sans-serif;
       background: linear-gradient(160deg, #dce8f5 0%, #e8f0fa 55%, #f0ebf8 100%);
       min-height: 100vh;
-      color: var(--navy);
-      overflow-x: hidden;
-    }
-
-    /* ── Animated background ── */
-    .bg-blob {
-      position: fixed;
-      border-radius: 50%;
-      filter: blur(90px);
-      opacity: .22;
-      pointer-events: none;
-      z-index: 0;
-      animation: blobFloat 12s ease-in-out infinite;
-    }
-    .blob1 { width: 340px; height: 340px; background: #7ab8e8; top: -80px;  left: -80px; animation-delay: 0s; }
-    .blob2 { width: 260px; height: 260px; background: #c8b8e8; bottom: -60px; right: -60px; animation-delay: -5s; }
-    .blob3 { width: 200px; height: 200px; background: #f0a8a8; top: 40%; left: 60%; animation-delay: -8s; opacity: .15; }
-    @keyframes blobFloat {
-      0%,100% { transform: scale(1)   translate(0,0); }
-      50%      { transform: scale(1.2) translate(20px, -20px); }
-    }
-
-    /* ── Scroll container ── */
-    .page { position: relative; z-index: 1; padding: 28px 20px 56px; max-width: 480px; margin: 0 auto; }
-
-    /* ── Header ── */
-    header { text-align: center; margin-bottom: 28px; }
-    .sap-pill {
-      display: inline-flex; align-items: center; gap: 8px;
-      background: rgba(74,112,200,.12);
-      border: 1px solid rgba(74,112,200,.3);
-      border-radius: 20px; padding: 5px 14px;
-      font-size: 11px; font-weight: 700; letter-spacing: 2px;
-      text-transform: uppercase; color: var(--primary);
-      margin-bottom: 14px;
-    }
-    .sap-pill span { background: var(--primary); color: #fff; border-radius: 4px; padding: 1px 6px; font-size: 11px; }
-    header h1 {
-      font-size: clamp(24px, 6vw, 32px);
-      font-weight: 800;
-      background: linear-gradient(135deg, var(--navy) 40%, var(--primary));
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-      margin-bottom: 6px;
-      line-height: 1.15;
-    }
-    header p { font-size: 13px; color: var(--subtext); }
-
-    /* ── Upload zone ── */
-    .upload-zone {
-      border: 2px dashed rgba(74,112,200,.3);
-      border-radius: 24px;
-      padding: 40px 20px;
-      text-align: center;
-      cursor: pointer;
-      transition: all .25s;
-      position: relative;
-      overflow: hidden;
-      margin-bottom: 16px;
-      background: rgba(255,255,255,.55);
-      box-shadow: 0 2px 16px rgba(74,112,200,.08);
-    }
-    .upload-zone:hover, .upload-zone.drag-over {
-      border-color: var(--primary);
-      background: rgba(74,112,200,.07);
-      box-shadow: 0 0 30px -8px rgba(74,112,200,.3);
-    }
-    .upload-zone .uz-icon {
-      font-size: 52px; margin-bottom: 14px;
-      display: block;
-      animation: iconBob 3s ease-in-out infinite;
-    }
-    @keyframes iconBob {
-      0%,100% { transform: translateY(0); }
-      50%      { transform: translateY(-6px); }
-    }
-    .upload-zone h3 { font-size: 16px; font-weight: 700; margin-bottom: 5px; color: var(--navy); }
-    .upload-zone p  { font-size: 13px; color: var(--subtext); }
-    #fileInput { display: none; }
-
-    /* ── Preview ── */
-    .preview-wrap { display: none; text-align: center; margin-bottom: 16px; }
-    .preview-wrap img {
-      max-width: 100%; max-height: 280px;
-      border-radius: 18px; object-fit: contain;
-      box-shadow: 0 8px 32px rgba(74,112,200,.2);
-    }
-    .remove-btn {
-      display: block; margin-top: 10px;
-      font-size: 12px; color: var(--subtext);
-      cursor: pointer; text-decoration: underline;
-    }
-
-    /* ── Buttons ── */
-    .btn-row { display: flex; gap: 10px; margin-bottom: 18px; }
-    .btn {
-      flex: 1; padding: 14px 10px; border: none; border-radius: 14px;
-      font-size: 14px; font-weight: 700; cursor: pointer;
-      transition: transform .15s, box-shadow .15s;
-      display: flex; align-items: center; justify-content: center; gap: 8px;
-    }
-    .btn:active { transform: scale(.97); }
-    .btn-cam {
-      background: rgba(255,255,255,.8);
-      border: 1.5px solid rgba(74,112,200,.25);
-      color: var(--navy);
-    }
-    .btn-cam:hover { background: rgba(255,255,255,1); }
-    .btn-gal {
-      background: rgba(74,112,200,.12);
-      border: 1.5px solid rgba(74,112,200,.35);
-      color: var(--primary);
-    }
-    .btn-gal:hover { background: rgba(74,112,200,.2); }
-
-    .btn-submit {
-      width: 100%; padding: 18px;
-      font-size: 17px; font-weight: 800;
-      border-radius: 40px; border: none; cursor: pointer;
-      background: linear-gradient(135deg, var(--primary) 0%, #3358b0 100%);
-      color: #fff;
-      box-shadow: 0 6px 28px -4px rgba(74,112,200,.45);
-      display: none;
-      transition: transform .15s, box-shadow .15s;
-      letter-spacing: .5px;
-    }
-    .btn-submit.visible { display: block; }
-    .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 10px 36px -4px rgba(74,112,200,.6); }
-    .btn-submit:active { transform: scale(.98); }
-    .btn-submit:disabled { background: #b8cce0; color: #8aaac8; box-shadow: none; cursor: not-allowed; transform: none; }
-
-    /* ── Progress ── */
-    .progress-wrap { display: none; margin-bottom: 16px; }
-    .progress-label { font-size: 12px; color: var(--subtext); margin-bottom: 6px; text-align: center; }
-    .progress-track { background: rgba(74,112,200,.12); border-radius: 8px; height: 7px; overflow: hidden; }
-    .progress-bar {
-      height: 100%;
-      background: linear-gradient(90deg, var(--primary), #9080cc);
-      border-radius: 8px;
-      width: 0%;
-      transition: width .3s ease;
-    }
-
-    /* ── Success state ── */
-    .success-screen {
-      display: none;
-      position: fixed; inset: 0; z-index: 200;
-      background: linear-gradient(160deg, #dce8f5 0%, #e8f0fa 55%, #f0ebf8 100%);
+      display: flex;
       flex-direction: column;
-      align-items: center; justify-content: center;
-      text-align: center; padding: 40px 28px;
-      animation: fadeInUp .5s ease both;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 20px;
     }
-    .success-screen.show { display: flex; }
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(30px); }
-      to   { opacity: 1; transform: translateY(0); }
+    .card {
+      background: #fff;
+      border-radius: 24px;
+      box-shadow: 0 8px 48px rgba(74,112,200,.18);
+      padding: 48px 44px;
+      max-width: 500px;
+      width: 100%;
+      text-align: center;
     }
-    .success-ring {
-      width: 100px; height: 100px; border-radius: 50%;
-      background: rgba(74,222,128,.12);
-      border: 2px solid var(--green);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 44px; margin-bottom: 24px;
-      box-shadow: 0 0 40px rgba(74,222,128,.35);
-      animation: popIn .5s cubic-bezier(.34,1.56,.64,1) .1s both;
+    .label {
+      font-size: 11px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: #8aacca;
+      margin-bottom: 8px;
     }
-    @keyframes popIn {
-      from { transform: scale(.4); opacity: 0; }
-      to   { transform: scale(1); opacity: 1; }
+    h1 {
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--navy);
+      margin-bottom: 6px;
     }
-    .success-screen h2 { font-size: 28px; font-weight: 800; margin-bottom: 8px; color: var(--navy); }
-    .success-screen p  { font-size: 15px; color: var(--subtext); margin-bottom: 32px; line-height: 1.6; }
-    .success-confetti {
-      position: absolute; inset: 0; pointer-events: none; overflow: hidden;
+    h1 span { color: var(--primary); }
+    .sub {
+      color: #6888aa;
+      font-size: 15px;
+      margin-bottom: 36px;
     }
-    .confetti-dot {
-      position: absolute;
-      width: 8px; height: 8px;
-      border-radius: 50%;
-      animation: confettiFall 2.5s ease-out both;
+
+    /* drop zone */
+    .drop-zone {
+      border: 2px dashed rgba(74,112,200,.35);
+      border-radius: 16px;
+      padding: 40px 20px;
+      cursor: pointer;
+      transition: all .2s;
+      background: #f7f9fd;
+      position: relative;
     }
-    @keyframes confettiFall {
-      0%   { opacity: 1; transform: translateY(-30px) rotate(0deg); }
-      100% { opacity: 0; transform: translateY(100vh) rotate(720deg); }
+    .drop-zone:hover, .drop-zone.over {
+      border-color: var(--primary);
+      background: #eef2fb;
     }
-    .gallery-link {
-      display: inline-flex; align-items: center; gap: 8px;
-      padding: 14px 32px; border-radius: 40px;
+    .drop-zone input[type=file] {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+    }
+    .drop-icon {
+      font-size: 52px;
+      display: block;
+      margin-bottom: 12px;
+      transition: transform .2s;
+    }
+    .drop-zone:hover .drop-icon { transform: scale(1.1); }
+    .drop-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 4px;
+    }
+    .drop-hint {
+      font-size: 13px;
+      color: #8aacca;
+    }
+
+    /* preview */
+    #preview {
+      display: none;
+      margin-top: 20px;
+    }
+    #preview img {
+      width: 100%;
+      border-radius: 12px;
+      max-height: 260px;
+      object-fit: cover;
+      display: block;
+      margin-bottom: 12px;
+    }
+    #filename {
+      font-size: 13px;
+      color: #6888aa;
+    }
+
+    /* SharePoint hint */
+    .sp-info {
+      margin-top: 24px;
+      padding: 14px 18px;
+      background: #f0f4fc;
+      border-radius: 12px;
+      font-size: 13px;
+      color: #4a70c8;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      text-align: left;
+    }
+    .sp-info .icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+
+    /* upload button */
+    .btn-row {
+      margin-top: 28px;
+    }
+    button.upload-btn {
       background: var(--primary);
+      color: #fff;
       border: none;
-      color: #fff; text-decoration: none; font-weight: 700; font-size: 15px;
-      box-shadow: 0 6px 24px rgba(74,112,200,.4);
+      border-radius: 50px;
+      padding: 14px 44px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background .2s, transform .15s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0 auto;
+    }
+    button.upload-btn:hover:not(:disabled) {
+      background: #3a60b8;
+      transform: translateY(-1px);
+    }
+    button.upload-btn:disabled {
+      background: #c0cfea;
+      cursor: not-allowed;
+    }
+
+    /* success */
+    .success {
+      display: none;
+      text-align: center;
+      padding: 20px 0 10px;
+    }
+    .success .check { font-size: 56px; margin-bottom: 10px; }
+    .success h2 { font-size: 22px; color: var(--navy); font-weight: 800; }
+    .success p { color: #6888aa; font-size: 14px; margin-top: 6px; }
+    .success a {
+      display: inline-block;
+      margin-top: 20px;
+      color: var(--primary);
+      font-weight: 600;
+      font-size: 14px;
+      text-decoration: none;
+      border: 2px solid var(--primary);
+      border-radius: 50px;
+      padding: 10px 28px;
       transition: all .2s;
     }
-    .gallery-link:hover { background: #3358b0; transform: translateY(-2px); }
-    .another-btn {
-      margin-top: 14px; display: block;
-      font-size: 13px; color: var(--subtext);
-      cursor: pointer; text-decoration: underline; background: none; border: none;
-    }
+    .success a:hover { background: var(--primary); color: #fff; }
   </style>
 </head>
 <body>
+<div class="card">
+  <div id="uploadView">
+    <div class="label">SAP Discovery Showroom</div>
+    <h1>Share a <span>Moment</span> ✨</h1>
+    <p class="sub">Drop your photo and we'll add it to the live gallery</p>
 
-<!-- Background blobs -->
-<div class="bg-blob blob1"></div>
-<div class="bg-blob blob2"></div>
-<div class="bg-blob blob3"></div>
-
-<div class="page">
-
-  <!-- Header -->
-  <header>
-    <div class="sap-pill"><span>SAP</span> Discovery Showroom</div>
-    <h1>📸 Upload your Photo</h1>
-    <p>Appreciation Event 2026</p>
-  </header>
-
-  <!-- Main content -->
-  <div id="mainContent">
-
-    <!-- Upload zone -->
-    <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
-      <span class="uz-icon">📷</span>
-      <h3>Tap to capture your moment</h3>
-      <p>Take a photo or choose from your gallery</p>
+    <div class="drop-zone" id="dropZone">
       <input type="file" id="fileInput" accept="image/*" capture="environment"/>
+      <span class="drop-icon">📸</span>
+      <div class="drop-title">Tap to choose a photo</div>
+      <div class="drop-hint">or drag &amp; drop here · JPG, PNG, GIF, WebP</div>
     </div>
 
-    <!-- Preview -->
-    <div class="preview-wrap" id="previewWrap">
-      <img id="previewImg" src="" alt="Preview"/>
-      <span class="remove-btn" onclick="removePhoto()">✕ Choose a different photo</span>
+    <div id="preview">
+      <img id="previewImg" src="" alt="preview"/>
+      <div id="filename"></div>
     </div>
 
-    <!-- Buttons -->
+    <div class="sp-info">
+      <span class="icon">ℹ️</span>
+      <span>Your photo goes directly into the event SharePoint folder and appears in the gallery automatically — no account needed.</span>
+    </div>
+
     <div class="btn-row">
-      <button class="btn btn-cam" onclick="openCamera()">📷 Camera</button>
-      <button class="btn btn-gal" onclick="openGallery()">🖼️ Gallery</button>
+      <button class="upload-btn" id="uploadBtn" disabled>
+        <span>📤</span> Upload to Gallery
+      </button>
     </div>
+  </div>
 
-    <button class="btn-submit" id="submitBtn" onclick="uploadPhoto()">
-      ⬆️ Upload to Gallery
-    </button>
-
-    <!-- Progress -->
-    <div class="progress-wrap" id="progressWrap">
-      <div class="progress-label" id="progressLabel">Uploading your photo…</div>
-      <div class="progress-track"><div class="progress-bar" id="progressBar"></div></div>
-    </div>
-
-  </div><!-- /mainContent -->
-
-</div><!-- /page -->
-
-<!-- Success screen -->
-<div class="success-screen" id="successScreen">
-  <div class="success-confetti" id="confettiContainer"></div>
-  <div class="success-ring">✓</div>
-  <h2>Photo is live! 🎉</h2>
-  <p>Your photo has been uploaded.<br>Look for it on the gallery screen!</p>
-  <a href="photo-gallery.html" class="gallery-link">👀 View Gallery</a>
-  <button class="another-btn" onclick="resetUpload()">Upload another photo</button>
+  <div class="success" id="successView">
+    <div class="check">🎉</div>
+    <h2>Photo uploaded!</h2>
+    <p>It will appear in the gallery in a few seconds.</p>
+    <a href="/gallery">👀 View Gallery</a>
+  </div>
 </div>
 
 <script>
-  /* ── Firebase config (same project as Jukebox) ── */
-  const FB = {
-    apiKey:      'AIzaSyCweHck9vfaGyYUszJ44TuNFjsrcm76nIw',
-    databaseURL: 'https://jukebox-appreciation-event-default-rtdb.europe-west1.firebasedatabase.app'
-  };
+  /* ── upload target: local server ── */
+  const UPLOAD_API = '/upload';
+
+  const dropZone  = document.getElementById('dropZone');
+  const fileInput = document.getElementById('fileInput');
+  const preview   = document.getElementById('preview');
+  const previewImg = document.getElementById('previewImg');
+  const filename  = document.getElementById('filename');
+  const uploadBtn = document.getElementById('uploadBtn');
+  const uploadView = document.getElementById('uploadView');
+  const successView = document.getElementById('successView');
 
   let selectedFile = null;
 
-  function openCamera() {
-    const inp = document.getElementById('fileInput');
-    inp.setAttribute('capture', 'environment');
-    inp.click();
-  }
-  function openGallery() {
-    const inp = document.getElementById('fileInput');
-    inp.removeAttribute('capture');
-    inp.click();
-  }
-
-  document.getElementById('fileInput').addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    selectedFile = file;
-    const reader = new FileReader();
-    reader.onload = ev => {
-      document.getElementById('previewImg').src = ev.target.result;
-      document.getElementById('previewWrap').style.display = 'block';
-      document.getElementById('uploadZone').style.display   = 'none';
-      document.getElementById('submitBtn').classList.add('visible');
-    };
-    reader.readAsDataURL(file);
+  /* drag-and-drop styling */
+  ['dragover','dragenter'].forEach(e => dropZone.addEventListener(e, function(ev){
+    ev.preventDefault(); dropZone.classList.add('over');
+  }));
+  ['dragleave','drop'].forEach(e => dropZone.addEventListener(e, function(){
+    dropZone.classList.remove('over');
+  }));
+  dropZone.addEventListener('drop', function(ev) {
+    ev.preventDefault();
+    const f = ev.dataTransfer.files[0];
+    if (f) handleFile(f);
   });
 
-  function removePhoto() {
-    selectedFile = null;
-    document.getElementById('fileInput').value = '';
-    document.getElementById('previewWrap').style.display = 'none';
-    document.getElementById('uploadZone').style.display   = 'block';
-    document.getElementById('submitBtn').classList.remove('visible');
+  fileInput.addEventListener('change', function() {
+    if (this.files[0]) handleFile(this.files[0]);
+  });
+
+  function handleFile(f) {
+    selectedFile = f;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      previewImg.src = e.target.result;
+      filename.textContent = f.name + ' (' + (f.size / 1024).toFixed(0) + ' KB)';
+      preview.style.display = 'block';
+      uploadBtn.disabled = false;
+    };
+    reader.readAsDataURL(f);
   }
 
-  /* ── Compress image on canvas ── */
-  function compressImage(file, maxPx, quality) {
-    return new Promise(resolve => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        let w = img.width, h = img.height;
-        if (w > h && w > maxPx)      { h = Math.round(h * maxPx / w); w = maxPx; }
-        else if (h >= w && h > maxPx) { w = Math.round(w * maxPx / h); h = maxPx; }
-        canvas.width = w; canvas.height = h;
-        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-        resolve(canvas.toDataURL('image/jpeg', quality));
-      };
-      img.src = URL.createObjectURL(file);
-    });
-  }
-
-  async function uploadPhoto() {
+  uploadBtn.addEventListener('click', async function() {
     if (!selectedFile) return;
-
-    const submitBtn    = document.getElementById('submitBtn');
-    const progressWrap = document.getElementById('progressWrap');
-    const progressBar  = document.getElementById('progressBar');
-    const progressLabel = document.getElementById('progressLabel');
-
-    submitBtn.disabled = true;
-    submitBtn.textContent = '⏳ Uploading…';
-    progressWrap.style.display = 'block';
-    progressLabel.textContent = 'Compressing photo…';
-
-    let progress = 0;
-    const tick = setInterval(() => {
-      progress = Math.min(progress + 6, 80);
-      progressBar.style.width = progress + '%';
-    }, 120);
+    uploadBtn.disabled = true;
+    uploadBtn.innerHTML = '<span>⏳</span> Uploading...';
 
     try {
-      const dataUrl = await compressImage(selectedFile, 720, 0.72);
-      progressLabel.textContent = 'Uploading to gallery…';
-
-      const id    = Date.now();
-      const entry = { id, dataUrl, timestamp: new Date().toISOString() };
-
-      const res = await fetch(`${FB.databaseURL}/photobooth/photos/${id}.json`, {
-        method:  'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify(entry)
-      });
-
-      clearInterval(tick);
-      if (!res.ok) throw new Error('Firebase error ' + res.status);
-      progressBar.style.width = '100%';
-
-      setTimeout(showSuccess, 350);
-    } catch (err) {
-      clearInterval(tick);
-      progressWrap.style.display = 'none';
-      submitBtn.disabled = false;
-      submitBtn.textContent = '⬆️ Upload to Gallery';
-      alert('Upload failed. Please check your connection and try again.');
+      const form = new FormData();
+      form.append('file', selectedFile);
+      const r = await fetch(UPLOAD_API, { method: 'POST', body: form });
+      if (!r.ok) throw new Error('Server error ' + r.status);
+      uploadView.style.display = 'none';
+      successView.style.display = 'block';
+    } catch(e) {
+      uploadBtn.disabled = false;
+      uploadBtn.innerHTML = '<span>📤</span> Upload to Gallery';
+      alert('Upload failed: ' + e.message + '\n\nMake sure server.py is running.');
     }
-  }
-
-  function showSuccess() {
-    document.getElementById('mainContent').style.display = 'none';
-    const screen = document.getElementById('successScreen');
-    screen.classList.add('show');
-    spawnConfetti();
-  }
-
-  function spawnConfetti() {
-    const colors = ['#0070f2','#f5a623','#4ade80','#f472b6','#a78bfa','#ffffff'];
-    const container = document.getElementById('confettiContainer');
-    for (let i = 0; i < 40; i++) {
-      const dot = document.createElement('div');
-      dot.className = 'confetti-dot';
-      dot.style.cssText = `
-        left: ${Math.random()*100}%;
-        background: ${colors[Math.floor(Math.random()*colors.length)]};
-        width: ${4 + Math.random()*8}px;
-        height: ${4 + Math.random()*8}px;
-        border-radius: ${Math.random() > .5 ? '50%' : '2px'};
-        animation-delay: ${Math.random()*1.5}s;
-        animation-duration: ${1.8 + Math.random()}s;
-      `;
-      container.appendChild(dot);
-    }
-  }
-
-  function resetUpload() {
-    document.getElementById('successScreen').classList.remove('show');
-    document.getElementById('mainContent').style.display = 'block';
-    document.getElementById('progressWrap').style.display = 'none';
-    document.getElementById('progressBar').style.width = '0%';
-    removePhoto();
-    document.getElementById('submitBtn').disabled = false;
-    document.getElementById('submitBtn').textContent = '⬆️ Upload to Gallery';
-    document.getElementById('confettiContainer').innerHTML = '';
-  }
-
-
+  });
 </script>
 </body>
 </html>
