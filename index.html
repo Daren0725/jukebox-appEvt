@@ -825,18 +825,18 @@
     }
 
     /* ─── Router ─── */
-    var VIEWS = ['submit', 'display', 'dj'];
+    var VIEWS = ['submit', 'display'];
     function go(v) {
         for (var i = 0; i < VIEWS.length; i++) {
             var id = VIEWS[i];
             var vEl = document.getElementById('view-' + id);
             var nEl = document.getElementById('nav-' + id);
             if (id === v) {
-                vEl.classList.add('active');
-                nEl.classList.add('active');
+                if (vEl) vEl.classList.add('active');
+                if (nEl) nEl.classList.add('active');
             } else {
-                vEl.classList.remove('active');
-                nEl.classList.remove('active');
+                if (vEl) vEl.classList.remove('active');
+                if (nEl) nEl.classList.remove('active');
             }
         }
         location.hash = v;
