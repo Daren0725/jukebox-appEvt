@@ -258,9 +258,17 @@
     uploadBtn.innerHTML = '<span>⏳</span> Uploading...';
 
     try {
-      const form = new FormData();
-      form.append('file', selectedFile);
-      const r = await fetch(UPLOAD_API, { method: 'POST', body: form });
+      const data = await new Promise((res, rej) => {
+        const reader = new FileReader();
+        reader.onload  = e => res(e.target.result.split(',')[1]);
+        reader.onerror = rej;
+        reader.readAsDataURL(selectedFile);
+      });
+      const r = await fetch(UPLOAD_API, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({filename: selectedFile.name, data})
+      });
       if (!r.ok) throw new Error('Server error ' + r.status);
       uploadView.style.display = 'none';
       successView.style.display = 'block';
