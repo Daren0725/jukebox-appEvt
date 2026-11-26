@@ -267,12 +267,18 @@
         fetch(FIREBASE_CFG.databaseURL + '/jukebox/songs.json')
             .then(function(r) { return r.json(); })
             .then(function(data) {
-                songs = data && typeof data === 'object' && !Array.isArray(data)
-                    ? Object.values(data).sort(function(a,b){ return a.ts - b.ts; })
-                    : [];
-                fbReady = true;
-                setSyncStatus('live');
-                render();
+                if (data && typeof data === 'object' && !Array.isArray(data)) {
+                    /* Firebase has songs — use them */
+                    songs = Object.values(data).sort(function(a,b){ return a.ts - b.ts; });
+                    fbReady = true;
+                    setSyncStatus('live');
+                    render();
+                } else {
+                    /* Firebase empty — fall back to localStorage */
+                    fbReady = true;
+                    setSyncStatus('live');
+                    readLocal();
+                }
             })
             .catch(function() {
                 setSyncStatus('connecting');
