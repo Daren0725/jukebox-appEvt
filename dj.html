@@ -214,41 +214,83 @@
         var el = document.getElementById('syncBadge');
         if (!el) return;
         el.className = state;
-        if (state === 'live')           el.textContent = '\u25cf Live Sync';
-        else if (state === 'connecting') el.textContent = '\u25cf Connecting\u2026';
-        else                             el.textContent = '\u25cf Offline';
+        if      (state === 'live')        el.textContent = '\u25cf Live Sync';
+        else if (state === 'connecting')  el.textContent = '\u25cf Connecting\u2026';
+        else if (state === 'local')       el.textContent = '\u25cf Local only';
+        else                              el.textContent = '\u25cf Offline';
+    }
+
+    /* ═══════════════════════════════
+       LOCALSTORAGE HELPERS
+    ═══════════════════════════════ */
+    function readLocal() {
+        try {
+            var raw = localStorage.getItem('jukebox');
+            if (raw) {
+                var data = JSON.parse(raw);
+                /* index.html stores an array; Firebase mirror stores an object */
+                songs = Array.isArray(data)
+                    ? data.slice().sort(function(a,b){ return a.ts - b.ts; })
+                    : (data && typeof data === 'object'
+                        ? Object.values(data).sort(function(a,b){ return a.ts - b.ts; })
+                        : []);
+            }
+        } catch(e) {}
+        setSyncStatus('local');
+        render();
+    }
+
+    function writeLocal() {
+        try { localStorage.setItem('jukebox', JSON.stringify(songs)); } catch(e) {}
     }
 
     /* ═══════════════════════════════
        FIREBASE REST API
     ═══════════════════════════════ */
     function persist() {
-        if (!FIREBASE_CFG.databaseURL) return;
+        if (!FIREBASE_CFG.databaseURL) { writeLocal(); return; }
         var obj = {};
         songs.forEach(function(s) { obj[s.id] = s; });
         fetch(FIREBASE_CFG.databaseURL + '/jukebox/songs.json', {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(obj)
-        }).catch(function(e) { console.warn('Write error', e); });
+        }).catch(function(e) {
+            console.warn('Write error', e);
+            writeLocal(); /* fallback: mirror to localStorage */
+        });
+        writeLocal(); /* always keep localStorage in sync for same-browser tab */
     }
 
     function pollFirebase() {
-        if (!FIREBASE_CFG.databaseURL) return;
+        if (!FIREBASE_CFG.databaseURL) { readLocal(); return; }
         fetch(FIREBASE_CFG.databaseURL + '/jukebox/songs.json')
             .then(function(r) { return r.json(); })
             .then(function(data) {
-                songs = data && typeof data === 'object'
+                songs = data && typeof data === 'object' && !Array.isArray(data)
                     ? Object.values(data).sort(function(a,b){ return a.ts - b.ts; })
                     : [];
                 fbReady = true;
                 setSyncStatus('live');
                 render();
             })
-            .catch(function() { setSyncStatus('connecting'); });
+            .catch(function() {
+                setSyncStatus('connecting');
+                readLocal(); /* Firebase unreachable — show localStorage songs */
+            });
     }
 
     function initFirebase() {
+        /* BroadcastChannel: picks up real-time updates from index.html same-browser */
+        try {
+            if (typeof BroadcastChannel !== 'undefined') {
+                var bc = new BroadcastChannel('jukebox');
+                bc.onmessage = function(e) {
+                    if (!fbReady && Array.isArray(e.data)) { songs = e.data; render(); }
+                };
+            }
+        } catch(e) {}
+
         pollFirebase();
         pollTimer = setInterval(pollFirebase, 2500);
     }
